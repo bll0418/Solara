@@ -42,13 +42,15 @@ jobs:
           npx cap init Solara com.example.solara --web-dir www
           npx cap add android
 
-      # 5. 构建 APK (激进修复区)
+      # 5. 构建 APK (核心最终修复区)
       - name: Build APK
         run: |
           cd android
-          # 【极端的修复】清理所有类型的 Gradle 缓存，包括 wrapper
-          rm -rf ~/.gradle/
-          # 禁用守护进程，并移除 --no-parallel，尝试用基础编译命令
+          # 【修复核心 1】在 android 目录下创建 gradle.properties 强制禁用 Daemon
+          echo "org.gradle.daemon=false" > gradle.properties
+          # 【修复核心 2】彻底清理 gradle 缓存
+          rm -rf ~/.gradle/caches/
+          # 【修复核心 3】执行构建
           ./gradlew assembleDebug --no-daemon
                 
       # 6. 上传 APK
