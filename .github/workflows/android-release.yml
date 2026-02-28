@@ -25,21 +25,32 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      # 3. 安装 Capacitor 并初始化 Android 项目
+      # 3. 整理项目结构以适配 Capacitor
+      - name: Prepare Web Assets
+        run: |
+          mkdir www
+          # 将所有静态文件移动到 www 目录
+          mv css www/
+          mv js www/
+          mv functions www/
+          mv *.html www/
+          # 如果有其他文件需要保留在根目录，请在这里调整
+
+      # 4. 安装 Capacitor 并初始化 Android 项目
       - name: Install and Init Capacitor
         run: |
           npm install @capacitor/core @capacitor/cli @capacitor/android
-          # 修正：移除 --overwrite，添加明确的项目名称和包名
-          npx cap init Solara com.example.solara --web-dir .
+          # 初始化时指定 web-dir 为 www
+          npx cap init Solara com.example.solara --web-dir www
           npx cap add android
 
-      # 4. 构建 APK
+      # 5. 构建 APK
       - name: Build APK
         run: |
           cd android
           ./gradlew assembleDebug
 
-      # 5. 上传 APK
+      # 6. 上传 APK
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
