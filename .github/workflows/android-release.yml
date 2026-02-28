@@ -12,42 +12,34 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # 1. 设置 Node.js 环境 (打包 Web 项目需要)
+      # 1. 设置 Node.js 环境
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '18'
 
-      # 2. 设置 Java 环境 (Android 构建需要)
+      # 2. 设置 Java 环境
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
 
-      # 3. 安装依赖并构建 Web 静态文件
-      # 注意：如果你的项目有 package.json，请取消下面的注释
-      # - name: Install Dependencies
-      #   run: npm install
-      # - name: Build Web
-      #   run: npm run build
-
-      # 4. 安装 Capacitor 并生成 Android 项目
-      # 这里假设你的 Web 静态文件最终在根目录或特定文件夹
-      - name: Build Android Project
+      # 3. 安装 Capacitor 并初始化 Android 项目
+      - name: Install and Init Capacitor
         run: |
           npm install @capacitor/core @capacitor/cli @capacitor/android
-          npx cap init --overwrite Solara com.example.solara --web-dir .
+          # 修正：移除 --overwrite，添加明确的项目名称和包名
+          npx cap init Solara com.example.solara --web-dir .
           npx cap add android
-          npx cap copy
 
-      # 5. 构建 APK
+      # 4. 构建 APK
       - name: Build APK
         run: |
           cd android
           ./gradlew assembleDebug
 
-      # 6. 上传 APK
+      # 5. 上传 APK
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
