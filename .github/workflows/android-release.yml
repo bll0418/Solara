@@ -39,21 +39,22 @@ jobs:
       - name: Install and Init Capacitor
         run: |
           npm install @capacitor/core @capacitor/cli @capacitor/android
-          # 物理删除 android 目录，确保完全重新生成，避免旧缓存冲突
+          # 物理删除 android 目录，确保完全重新生成
           rm -rf android
           npx cap init Solara com.example.solara --web-dir www
           npx cap add android
 
-      # 5. 构建 APK (激进隔离修复区)
+      # 5. 构建 APK (激进环境修复区)
       - name: Build APK
         run: |
           cd android
           # 【修复核心】在 android 目录下创建 gradle.properties 强制禁用 Daemon
           echo "org.gradle.daemon=false" > gradle.properties
-          # 【修复核心】删除项目内的本地缓存
+          # 【修复核心】强制删除全局和局部的所有gradle缓存
+          rm -rf ~/.gradle/caches/
           rm -rf .gradle/
-          # 【修复核心】禁用并行编译和进程复用
-          ./gradlew assembleDebug --no-daemon --no-parallel
+          # 【修复核心】执行编译，禁用并行、守护进程，并添加标志以处理潜在文件锁
+          ./gradlew assembleDebug --no-daemon --no-parallel -Dorg.gradle.unsafe.configuration-cache=false
                 
       # 6. 上传 APK
       - name: Upload APK
