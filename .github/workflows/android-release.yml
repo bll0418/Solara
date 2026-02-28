@@ -28,27 +28,27 @@ jobs:
       # 3. 整理项目结构以适配 Capacitor
       - name: Prepare Web Assets
         run: |
-          mkdir www
-          # 将所有静态文件移动到 www 目录
-          mv css www/
-          mv js www/
-          mv functions www/
-          mv *.html www/
-          # 如果有其他文件需要保留在根目录，请在这里调整
+          mkdir -p www
+          # 将所有静态文件移动到 www 目录，防止覆盖已有的 www 文件夹
+          mv css www/ || true
+          mv js www/ || true
+          mv functions www/ || true
+          mv *.html www/ || true
 
       # 4. 安装 Capacitor 并初始化 Android 项目
       - name: Install and Init Capacitor
         run: |
           npm install @capacitor/core @capacitor/cli @capacitor/android
-          # 初始化时指定 web-dir 为 www
+          # 明确目录初始化
           npx cap init Solara com.example.solara --web-dir www
           npx cap add android
 
-      # 5. 构建 APK
+      # 5. 构建 APK (核心修复区域)
       - name: Build APK
         run: |
           cd android
-          ./gradlew assembleDebug
+          # 清理本地缓存并执行编译，禁用并行编译以提高稳定性
+          ./gradlew clean assembleDebug --no-parallel
 
       # 6. 上传 APK
       - name: Upload APK
