@@ -27,32 +27,33 @@ jobs:
       - name: Prepare Web Assets
         run: |
           mkdir -p www
+          # 仅移动静态资源，排除 functions 目录
           mv css www/ || true
           mv js www/ || true
           mv *.html www/ || true
-          # 确保 functions 和其他非静态文件在 android 目录之外
+          # 确保 functions 在根目录，不会被误包入 APK
 
       # 2. 安装 Capacitor 并生成 Android 项目
       - name: Install and Init Capacitor
         run: |
           npm install @capacitor/core @capacitor/cli @capacitor/android
-          # 【彻底重置】删除 android 目录
+          # 【彻底重置】删除已有的 android 目录
           rm -rf android
           npx cap init Solara com.example.solara --web-dir www
           npx cap add android
 
-      # 3. 构建 APK (激进修复区)
+      # 3. 构建 APK (修复文件锁冲突)
       - name: Build APK
         run: |
           cd android
-          # 【修复核心】在 android 目录下创建 gradle.properties 强制禁用 Daemon
+          # 【关键】创建一个 gradle.properties 文件强制禁用守护进程，避免文件被锁
           echo "org.gradle.daemon=false" > gradle.properties
           
-          # 【修复核心】物理删除损坏的 Jar 文件，而非整个 cache，减少重新下载时间
+          # 【关键】精细清理损坏的 JAR 文件，而不是清空整个缓存
           rm -f ~/.gradle/caches/jars-9/18366b31678c0171857be093a3b8ec22/bcprov-jdk18on-1.79.jar
           
-          # 【修复核心】禁用配置缓存以解决 Jar 文件创建失败问题
-          ./gradlew assembleDebug --no-daemon --no-parallel -Dorg.gradle.unsafe.configuration-cache=false --refresh-dependencies
+          # 【关键】执行编译，禁用配置缓存以解决文件锁问题
+          ./gradlew assembleDebug --no-daemon -Dorg.gradle.unsafe.configuration-cache=false --refresh-dependencies
                 
       - name: Upload APK
         uses: actions/upload-artifact@v4
